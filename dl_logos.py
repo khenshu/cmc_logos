@@ -4,18 +4,19 @@ import os
 from bs4 import BeautifulSoup
 
 
-IMG_SIZE = "32x32"
+IMG_SIZE = "64x64"
+TYPES = [ "coins", "tokens" ]
 
-def get_logo_ids():
+def get_logo_ids(type):
     logo_dict = {}
-    result = requests.get("https://coinmarketcap.com/coins/views/all/")
+    result = requests.get("https://coinmarketcap.com/"+type+"/views/all/")
     c = result.content
     soup = BeautifulSoup(c)
     trows = soup.find_all("tr", id=re.compile("id"))
     for trow in trows:
         coin_id = trow.get("id").split("-", 1)[-1]
         #the logo_div tag contains the logo id
-        logo_div = trow.find("div", class_="currency-logo-sprite")
+        logo_div = trow.find("div", class_="logo-sprite")
         match = re.search("s-s-([0-9]*)", str(logo_div))
         logo_id = match.group(1)
         logo_dict[coin_id] = logo_id
@@ -41,5 +42,10 @@ def download_logos(logo_dict, img_size):
 
 
 if __name__ == "__main__":
-    logo_dict = get_logo_ids()
-    download_logos(logo_dict, IMG_SIZE)
+    totalDownloaded = 0
+    for counter, value in enumerate(TYPES):
+        print("Downloading CMC "+value+"...")
+        logo_dict = get_logo_ids(value)
+        download_logos(logo_dict, IMG_SIZE)
+        totalDownloaded += len(logo_dict)
+    print("Downloaded "+str(totalDownloaded)+" logos.")    
